@@ -1,0 +1,24 @@
+[package]
+name = "rusty-raspberry-hourglass"
+version = "0.1.0"
+edition = "2018"
+authors = ["Marcel Blanck"]
+license = "MIT or Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/MarcelBlanck/rusty-raspberry-hourglass"
+description = """
+Raspberry Pi Zero W based hourglass application with
+display, audio output and webserver based control.
+"""
+keywords = ["raspberry", "webserver", "wiringpi", "spi", "i2s"]
+categories = ["command-line-utilities", "maker", "raspberry"]
+include = ["src/", "LICENSE-*", "README.md"]
+
+[target.'cfg(target_arch = "arm-unknown-linux-gnueabihf")'.dependencies.wiringpi]
+version = "0.2"
+
+[target.'cfg(target_arch = "arm-unknown-linux-gnueabihf")'.dependencies.rppal]
+version = "0.12"
+
+[dependencies.mockall]
+version = "0.10.2"
