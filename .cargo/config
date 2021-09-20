@@ -1,2 +1,2 @@
-[build]
-target = "arm-unknown-linux-gnueabihf"
+#[build]
+#target = "arm-unknown-linux-gnueabihf"

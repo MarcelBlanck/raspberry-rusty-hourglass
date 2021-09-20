@@ -17,5 +17,8 @@ include = ["src/", "LICENSE-*", "README.md"]
 [target.'cfg(target_arch = "arm")'.dependencies.rppal]
 version = "0.12"
 
+[target.'cfg(not(target_arch = "arm"))'.dependencies.minifb]
+version = "0.12"
+
 [dependencies.mockall]
 version = "0.10.2"
