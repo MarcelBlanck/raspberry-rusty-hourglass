@@ -43,7 +43,6 @@ impl DisplayControl for MiniFbDisplay {
     }
 
     fn swap(&mut self) {
-        println!("Buffersize {}", self.buffer.len() );
         for i in 0..self.buffer.len() {
             let i_isize = isize::try_from(i).unwrap();
             let point = Point{

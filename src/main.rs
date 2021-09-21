@@ -4,9 +4,9 @@
 
 use crate::display::{DisplayControl, Point, Color};
 #[cfg(target_arch="arm")]
-use crate::raspberry_display::RaspberryDisplay;
+use crate::display::raspberry_display::RaspberryDisplay;
 #[cfg(not(target_arch="arm"))]
-use crate::minifb_display::MiniFbDisplay;
+use crate::display::minifb_display::MiniFbDisplay;
 
 use std::io;
 use std::io::Read;
@@ -15,14 +15,6 @@ use std::sync::mpsc;
 use std::{thread, time};
 
 mod display;
-
-#[cfg(target_arch="arm")]
-mod raspberry;
-#[cfg(target_arch="arm")]
-mod raspberry_display;
-
-#[cfg(not(target_arch="arm"))]
-mod minifb_display;
 
 fn spawn_input_thread() -> (thread::JoinHandle<()>, mpsc::Receiver<()>) {
     let (tx, rx): (Sender<()>, Receiver<()>) = mpsc::channel();
