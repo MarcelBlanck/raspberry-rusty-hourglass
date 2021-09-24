@@ -15,11 +15,11 @@ impl MiniFbDisplay {
     pub fn new() -> Self {
         MiniFbDisplay {
             fb: DisplayBuffer::new(),
-            buffer: [0u32; 32*128],
+            buffer: [0u32; WIDTH as usize * HEIGHT as usize],
             window: Window::new(
                 "Hourglass",
-                32,
-                128,
+                WIDTH as usize,
+                HEIGHT as usize,
                 WindowOptions {
                     resize: false,
                     scale: Scale::X4,

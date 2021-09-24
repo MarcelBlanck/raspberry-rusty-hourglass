@@ -5,7 +5,7 @@ pub mod minifb_display;
 
 pub const WIDTH: isize = 32;
 pub const HEIGHT: isize = 128;
-const DISPLAY_BUFFER_SIZE: usize = 512;
+const DISPLAY_BUFFER_SIZE: usize = 512; // height * width / 8
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Point {

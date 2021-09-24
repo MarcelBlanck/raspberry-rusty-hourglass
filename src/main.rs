@@ -8,51 +8,54 @@ use crate::display::raspberry_display::RaspberryDisplay;
 #[cfg(not(target_arch="arm"))]
 use crate::display::minifb_display::MiniFbDisplay;
 
-use std::io;
-use std::io::Read;
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
 use std::{thread, time};
 
 mod display;
+mod control;
+mod ui;
 
-fn spawn_input_thread() -> (thread::JoinHandle<()>, mpsc::Receiver<()>) {
-    let (tx, rx): (Sender<()>, Receiver<()>) = mpsc::channel();
-    let input_thread = thread::spawn(move || {
-        let mut buffer = [0u8; 1];
-        io::stdin().read_exact(&mut buffer).unwrap();
-        tx.send(()).unwrap();
-    });
-    (input_thread, rx)
-}
+#[actix_web::main]
+async fn main() {
+    let webservice = control::webservice::start_webservice();
 
-fn main() {
-    let (input_thread, input_rx) = spawn_input_thread();
+    let (await_input_enter_thread, await_input_enter_rx) = control::input::spawn_await_input_enter_thread();
 
     #[cfg(target_arch="arm")]
     let mut display = RaspberryDisplay::new();
     #[cfg(not(target_arch="arm"))]
     let mut display = MiniFbDisplay::new();
+
     display.init();
 
     println!("Hourglass running. Press Enter to end...");
+    let mut remaining_seconds = 0;
     loop {
-        display.fb().fill_with_black();
-        display.fb().draw_box_with_coords(0, 0, 31, 127,&Color::Black, &Color::White);
-        display.fb().draw_line_with_coords( 0, 0, 31, 127,&Color::White);
-        display.fb().draw_line_with_coords( 31, 0, 0, 127,&Color::White);
-        display.fb().draw_line_with_coords( 16, 0, 16, 64,&Color::White);
-        display.fb().draw_line_with_coords( 15, 0, 15, 64,&Color::White);
-        display.swap();
+        match webservice.hourglass_state_rx.try_recv() {
+            Ok(msg) => {
+                println!("State changed {:?}", msg);
+                if msg.finalize {
+                    println!("Ended by Webservice: Thanks for using hourglass. Good bye!");
+                    break;
+                } else {
+                    remaining_seconds = msg.remaining_seconds;
+                }
+            },
+            Err(_) => ()
+        }
 
-        thread::sleep(time::Duration::from_millis(1000));
-
-        if input_rx.try_recv().is_ok() {
-            println!("Thanks for using hourglass. Good bye!");
+        if await_input_enter_rx.try_recv().is_ok() {
+            println!("Ended by key: Thanks for using hourglass. Good bye!");
             break;
         }
+
+        display.fb().fill_with_black();
+        ui::block_clock::draw_block_clock(remaining_seconds, display.fb());
+        display.swap();
+
+        thread::sleep(time::Duration::from_millis(33));
     }
 
     display.deinit();
-    input_thread.join().unwrap();
+    webservice.server_control.stop(false).await;
+    await_input_enter_thread.join().unwrap();
 }

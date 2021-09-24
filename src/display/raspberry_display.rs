@@ -101,7 +101,6 @@ mod tests {
     use super::*;
     use mockall::*;
     use mockall::predicate::*;
-    use crate::raspberry::*;
 
     fn get_new_mocked_display() -> RaspberryDisplay<MockSpiInterface, MockPinInterface>  {
         RaspberryDisplay::new_generic(
