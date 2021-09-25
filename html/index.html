@@ -32,7 +32,7 @@
             }
 
             const seconds = hms[0] * 3600 + hms[1] * 60 + hms[2];
-            await fetch("/set_remaining_seconds/" + seconds);
+            await fetch("/set_duration_ms/" + seconds * 1000);
         } catch (e) {
             alert("Unable to set time: " + e);
             document.getElementById("time").value = "00:20:00";

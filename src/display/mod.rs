@@ -129,8 +129,8 @@ impl DisplayBuffer {
         self.draw_box_with_points(
             &Point{ x: std::cmp::min(x0, x1), y: std::cmp::min(y0, y1) },
             &Point{ x: std::cmp::max(x0, x1), y: std::cmp::max(y0, y1) },
-            &Color::Black,
-            &Color::White
+            fill_color,
+            border_color
         );
     }
 
