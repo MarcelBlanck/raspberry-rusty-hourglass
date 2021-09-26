@@ -63,6 +63,29 @@ $ ./run_cross_test.sh
 * PIN19 Raspberry -> LRC
 * PIN21 Raspberry -> DIN.
 
+# Tools
+
+I created a few tools in the tools/ directory. To use them please install python3. I recommend using a virtual environment in the root path of the repo.
+
+```
+python3 -m venv env
+source env/bin/activate
+pip3 install -r requirements.txt
+```
+
+You will have to run `source env/bin/activate` everytime when you navigate to the root directory of the repo with a new terminal window.
+
+## png_to_bw_array.py
+
+The script will output a Rust array declaration and initialization for copy-paste usage.
+
+The script needs a path to a greyscale png image and will transform it to black-white dotmatrix image data.
+
+Usage:
+```
+python3 png_to_bw_array.py [threshold 0-255] [path to greyscale png file]
+```
+
 # License
 
 Licensed, at your option, under either the [Apache License, Version 2.0](LICENSE-APACHE) or the [MIT license](LICENSE-MIT).
