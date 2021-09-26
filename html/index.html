@@ -3,12 +3,12 @@
 <body>
     <h1>Hourglass Control</h1>
 
-    <label>Time (hh:mm:ss): </label>
-    <input type="text" id="time" value="00:20:00">
-    <button onclick="setRemainingTime()">Set</button>
+    <label>Time (mm:ss, max. 52:00): </label>
+    <input type="text" id="time" value="20:00">
+    <button onclick="setRemainingTime()">Start</button>
 
     <br><br>
-    <button onclick="action('start')">Start</button>
+
     <button onclick="action('stop')">Stop</button>
 
     <br><br>
@@ -23,16 +23,18 @@
 
     async function setRemainingTime() {
         try {
-            const hms = document.getElementById("time").value
+            const time_min_sec = document.getElementById("time").value
                 .split(':')
                 .map(text => parseInt(text));
 
-            if (hms.length !== 3 || hms.some(num => Number.isNaN(num))) {
-                throw "Wrong number format, please use hh:mm:ss.";
+            if (time_min_sec.length !== 2 || time_min_sec.some(num => Number.isNaN(num))) {
+                throw "Wrong number format, please use mm:ss.";
             }
 
-            const seconds = hms[0] * 3600 + hms[1] * 60 + hms[2];
+            const seconds = time_min_sec[0] * 60 + time_min_sec[1];
+            await fetch("/stop");
             await fetch("/set_duration_ms/" + seconds * 1000);
+            await fetch("/start");
         } catch (e) {
             alert("Unable to set time: " + e);
             document.getElementById("time").value = "00:20:00";

@@ -1,5 +1,7 @@
 use std::sync::{Arc, RwLock};
 
+pub const MAXIMUM_DURATION_MS: u128 = 52 * 60 * 1000;
+
 #[derive(Debug)]
 pub struct HourglassState{
     pub ticking: bool,

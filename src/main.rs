@@ -48,7 +48,6 @@ async fn main() {
             }
         }
 
-
         let current_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
         if hourglass_state.read().unwrap().ticking {
             let target_time_ms = hourglass_state.read().unwrap().target_time_ms;
@@ -58,7 +57,7 @@ async fn main() {
                 ui::block_clock::draw_block_clock((target_time_ms - current_time_ms)/1000, display.fb());
             } else {
                 // Blink the display to signal "time's up"
-                if (current_time_ms / 1000) % 2 == 0 {
+                if (current_time_ms / 500) % 2 == 0 {
                     display.fb().fill_with_white();
                 } else {
                     display.fb().fill_with_black();
@@ -70,7 +69,7 @@ async fn main() {
         }
         display.swap();
 
-        thread::sleep(time::Duration::from_millis(500));
+        thread::sleep(time::Duration::from_millis(250));
     }
 
     display.deinit();
