@@ -91,6 +91,10 @@ impl<T: SpiInterface, U: PinInterface> DisplayControl for RaspberryDisplay<T, U>
         self.spi.send_bytes(&self.fb.buffer);
     }
 
+    fn safe_swap(&mut self) {
+        self.swap(); // No double buffering, one swap is sufficient
+    }
+
     fn fb<'a>(&'a mut self) -> &'a mut DisplayBuffer {
         &mut self.fb
     }

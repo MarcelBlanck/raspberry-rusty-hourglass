@@ -39,6 +39,7 @@ pub trait DisplayControl {
     fn init(&mut self);
     fn deinit(&mut self);
     fn swap(&mut self);
+    fn safe_swap(&mut self);
     fn fb<'a>(&'a mut self) -> &'a mut DisplayBuffer;
 }
 

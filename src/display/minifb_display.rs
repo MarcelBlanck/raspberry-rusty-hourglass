@@ -58,6 +58,11 @@ impl DisplayControl for MiniFbDisplay {
         self.window.update_with_buffer(&self.buffer).unwrap();
     }
 
+    fn safe_swap(&mut self) {
+        self.swap();
+        self.swap(); // Additional swap to ensure display when double buffering
+    }
+
     fn fb<'a>(&'a mut self) -> &'a mut DisplayBuffer {
         &mut self.fb
     }

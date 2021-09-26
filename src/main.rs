@@ -30,10 +30,20 @@ async fn main() {
     #[cfg(not(target_arch="arm"))]
     let mut display = MiniFbDisplay::new();
 
+    thread::sleep(time::Duration::from_millis(1250));
     display.init();
 
     println!("Hourglass running. Press Enter to end...");
+
+    // These variables help minimize the display update.
+    // They make the ui drawing look a bit more complex,
+    // but save a lot of processing and energy.
+    let mut last_remaining_seconds = 0;
+    let mut welcome_screen_shown = false;
+    let mut is_filled_white = false;
+
     loop {
+
         {
             let hourglass_state_unlocked_r = hourglass_state.read().unwrap();
             let finished_by_webservice = hourglass_state_unlocked_r.finalize;
@@ -46,27 +56,45 @@ async fn main() {
 
         let current_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
         if hourglass_state.read().unwrap().ticking {
+            welcome_screen_shown = false;
             let target_time_ms = hourglass_state.read().unwrap().target_time_ms;
             if current_time_ms < target_time_ms {
+                is_filled_white = false;
                 // Draw and animate boxes to show remaining time
-                display.fb().fill_with_black();
-                ui::block_clock::draw_block_clock((target_time_ms - current_time_ms)/1000, display.fb());
-            } else if current_time_ms < target_time_ms + MAX_BLINK_TIME_MS {
-                // Blink the display to signal "time's up"
-                if (current_time_ms / 500) % 2 == 0 {
-                    display.fb().fill_with_white();
-                } else {
+                let remaining_seconds = (target_time_ms - current_time_ms) / 1000;
+                if remaining_seconds != last_remaining_seconds {
+                    last_remaining_seconds = remaining_seconds;
                     display.fb().fill_with_black();
+                    ui::block_clock::draw_block_clock(remaining_seconds, display.fb());
+                    display.safe_swap();
+                }
+            } else if current_time_ms < target_time_ms + MAX_BLINK_TIME_MS {
+                last_remaining_seconds = 0;
+                // Blink the display to signal "time's up"
+                let fill_white = (current_time_ms / 500) % 2 == 0;
+                if  fill_white && !is_filled_white {
+                    is_filled_white = true;
+                    display.fb().fill_with_white();
+                    display.safe_swap();
+                } else if !fill_white && is_filled_white {
+                    is_filled_white = false;
+                    display.fb().fill_with_black();
+                    display.safe_swap();
                 }
             } else {
-                hourglass_state.write().unwrap().ticking = false;
+                let hourglass_state_unlocked_rw = hourglass_state.write().unwrap();
+                hourglass_state_unlocked_rw.ticking = false;
             }
         } else {
             // Show welcome screen
-            display.fb().fill_with_pixmap(&data::WELCOME_SCREEN_PIXMAP);
+            if !welcome_screen_shown {
+                welcome_screen_shown = true;
+                last_remaining_seconds = 0;
+                is_filled_white = false;
+                display.fb().fill_with_pixmap(&data::WELCOME_SCREEN_PIXMAP);
+                display.safe_swap();
+            }
         }
-        display.swap();
-
         thread::sleep(time::Duration::from_millis(250));
     }
 
