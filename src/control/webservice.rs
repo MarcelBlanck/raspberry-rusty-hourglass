@@ -46,6 +46,13 @@ fn start_hourglass_timer(data: &web::Data<ThreadSafeHourglassState>) {
     data_unlocked_rw.ticking = true;
 }
 
+fn stop_hourglass_timer(data: &web::Data<ThreadSafeHourglassState>) {
+    let mut data_unlocked_rw = data.write().unwrap();
+    data_unlocked_rw.target_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
+    data_unlocked_rw.duration_ms = 0;
+    data_unlocked_rw.ticking = false;
+}
+
 async fn index(_data: web::Data<ThreadSafeHourglassState>) -> HttpResponse {
     HttpResponse::Found()
         .header("LOCATION", "/index.html")
@@ -58,8 +65,7 @@ async fn start(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
 }
 
 async fn stop(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
-    let mut data_unlocked_rw = data.write().unwrap();
-    data_unlocked_rw.ticking = false;
+    stop_hourglass_timer(&data);
     format!("Stopped.")
 }
 

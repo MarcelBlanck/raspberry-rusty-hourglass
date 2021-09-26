@@ -82,7 +82,9 @@ async fn main() {
                     display.safe_swap();
                 }
             } else {
-                let hourglass_state_unlocked_rw = hourglass_state.write().unwrap();
+                let mut hourglass_state_unlocked_rw = hourglass_state.write().unwrap();
+                hourglass_state_unlocked_rw.target_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
+                hourglass_state_unlocked_rw.duration_ms = 0;
                 hourglass_state_unlocked_rw.ticking = false;
             }
         } else {
