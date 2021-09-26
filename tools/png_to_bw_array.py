@@ -2,7 +2,6 @@ import sys
 import imageio
 import numpy as np
 
-
 if len(sys.argv) != 3:
     print("Usage: python3 png_to_bw_array.py [threshold 0-255] [path to greyscale png file]")
     quit()
