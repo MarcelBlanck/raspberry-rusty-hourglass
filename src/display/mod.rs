@@ -20,13 +20,11 @@ pub enum Color {
 }
 
 pub struct Pixmap {
-    data: Vec<u8>,
-    width: usize,
-    height: usize
+    pub data: [[u8; WIDTH as usize]; HEIGHT as usize]
 }
 
 pub struct AsciiFont {
-    characters: Vec<Pixmap>
+    characters: [[u8; 6]; 256]
 }
 
 pub struct AsciiText {
@@ -62,7 +60,13 @@ impl DisplayBuffer {
     }
 
     pub fn fill_with_pixmap(&mut self, pixmap: &Pixmap) {
-
+        let data = &pixmap.data;
+        for x in 0..WIDTH as usize {
+            for y in 0..HEIGHT as usize {
+                let pixel_color = if data[y][x] == 0 { Color::Black } else { Color::White };
+                self.set_pixel_color(&Point{x: x as isize, y: 127 - y as isize}, &pixel_color);
+            }
+        }
     }
 
     pub fn write_ascii_text(&mut self, text: AsciiText) {

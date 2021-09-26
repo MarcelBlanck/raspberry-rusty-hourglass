@@ -15,17 +15,13 @@ mod display;
 mod control;
 mod ui;
 mod hourglass;
+mod data;
+
+const MAX_BLINK_TIME_MS: u128 = 120000;
 
 #[actix_web::main]
 async fn main() {
     let hourglass_state = Arc::new(RwLock::new(HourglassState::new()));
-
-    hourglass_state.write().unwrap().ticking = true;
-    hourglass_state.write().unwrap().duration_ms = 200000;
-    let current_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
-    hourglass_state.write().unwrap().target_time_ms = current_time_ms + 200000;
-
-
     let webservice = control::webservice::start_webservice(hourglass_state.clone());
     let (await_input_enter_thread, await_input_enter_rx) = control::input::spawn_await_input_enter_thread();
 
@@ -55,17 +51,19 @@ async fn main() {
                 // Draw and animate boxes to show remaining time
                 display.fb().fill_with_black();
                 ui::block_clock::draw_block_clock((target_time_ms - current_time_ms)/1000, display.fb());
-            } else {
+            } else if current_time_ms < target_time_ms + MAX_BLINK_TIME_MS {
                 // Blink the display to signal "time's up"
                 if (current_time_ms / 500) % 2 == 0 {
                     display.fb().fill_with_white();
                 } else {
                     display.fb().fill_with_black();
                 }
+            } else {
+                hourglass_state.write().unwrap().ticking = false;
             }
         } else {
-            // Show dark screen if not ticking
-            display.fb().fill_with_black();
+            // Show welcome screen
+            display.fb().fill_with_pixmap(&data::WELCOME_SCREEN_PIXMAP);
         }
         display.swap();
 
