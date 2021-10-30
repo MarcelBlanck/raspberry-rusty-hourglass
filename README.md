@@ -31,6 +31,10 @@ $ cargo install cross
 // Start the Docker daemon, or start the Docker gui app
 $ sudo systemctl start docker
 
+// (ONCE, MANDATORY)
+// Build the docker image for cross compilation in the repo root path
+$ docker build -t hourglass-crossbuild:local .
+
 // (ONCE, OPTIONAL)
 // Generating a ssh key and copying it over to the pi makes life easy
 $ ssh-copy-id <USERNAME>@<HOSTNAME or IP>
@@ -46,8 +50,8 @@ $ ./run_cross_test.sh
 
 * Raspberry Pi Zero W
 * http://www.waveshare.com/wiki/2.23inch_OLED_HAT
-* I2S Breakout board
-* Speaker
+* SparkFun I2S Audio Breakout, MAX98357A
+* 8 Ohm Speaker
 
 ## Setup Display Connection
 
@@ -56,6 +60,8 @@ $ ./run_cross_test.sh
 * DC pin on BMC 24
 
 ## Setup I2S Sound Breakout Connection
+
+https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/raspberry-pi-usage
 
 * 5V Raspberry -> Vin
 * GND Raspberry -> GND

@@ -2,3 +2,6 @@
 passthrough = [
     "RUST_BACKTRACE"
 ]
+
+[target.arm-unknown-linux-gnueabihf]
+image = "crossbuild:local"

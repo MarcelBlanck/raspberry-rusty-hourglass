@@ -11,7 +11,7 @@ Raspberry Pi Zero W based hourglass application with
 display, audio output and webserver based control.
 """
 keywords = ["raspberry", "webserver", "spi", "i2s"]
-categories = ["command-line-utilities", "maker", "raspberry"]
+categories = ["maker", "raspberry"]
 include = ["src/", "LICENSE-*", "README.md"]
 
 [target.'cfg(target_arch = "arm")'.dependencies.rppal]
@@ -26,3 +26,5 @@ actix-web = "3"
 actix-files = "0.5"
 crossbeam-channel = "0.5.1"
 futures = "0.3.17"
+cpal = "0.13.4"
+hound = "3.4.0"
