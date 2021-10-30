@@ -2,32 +2,44 @@
 #![allow(unused_variables)]
 #![allow(unused_imports)]
 
-use crate::{display::{DisplayControl, Point, Color}, hourglass::HourglassState};
-#[cfg(target_arch="arm")]
-use crate::display::raspberry_display::RaspberryDisplay;
-#[cfg(not(target_arch="arm"))]
+use audio::audio_playback;
+use cpal::traits::StreamTrait;
+
+#[cfg(not(target_arch = "arm"))]
 use crate::display::minifb_display::MiniFbDisplay;
+#[cfg(target_arch = "arm")]
+use crate::display::raspberry_display::RaspberryDisplay;
+use crate::{
+    display::{Color, DisplayControl, Point},
+    hourglass::HourglassState,
+};
 
-use std::{sync::Arc, sync::RwLock, thread, time};
 use std::time::SystemTime;
+use std::{sync::Arc, sync::RwLock, thread, time};
 
-mod display;
+mod audio;
 mod control;
-mod ui;
-mod hourglass;
 mod data;
+mod display;
+mod hourglass;
+mod ui;
 
 const MAX_BLINK_TIME_MS: u128 = 120000;
 
 #[actix_web::main]
 async fn main() {
+    let audio_stream =
+        audio_playback::play("./audio/424244__aceinet__number-90-flange-the-hammer-on-e.wav");
+    audio_stream.pause().unwrap();
+
     let hourglass_state = Arc::new(RwLock::new(HourglassState::new()));
     let webservice = control::webservice::start_webservice(hourglass_state.clone());
-    let (await_input_enter_thread, await_input_enter_rx) = control::input::spawn_await_input_enter_thread();
+    let (await_input_enter_thread, await_input_enter_rx) =
+        control::input::spawn_await_input_enter_thread();
 
-    #[cfg(target_arch="arm")]
+    #[cfg(target_arch = "arm")]
     let mut display = RaspberryDisplay::new();
-    #[cfg(not(target_arch="arm"))]
+    #[cfg(not(target_arch = "arm"))]
     let mut display = MiniFbDisplay::new();
 
     thread::sleep(time::Duration::from_millis(1250));
@@ -41,25 +53,28 @@ async fn main() {
     let mut last_remaining_seconds = 0;
     let mut welcome_screen_shown = false;
     let mut is_filled_white = false;
+    let mut end_audio_played = false;
 
     loop {
-
         {
             let hourglass_state_unlocked_r = hourglass_state.read().unwrap();
-            let finished_by_webservice = hourglass_state_unlocked_r.finalize;
-            let finished_by_key_input = await_input_enter_rx.try_recv().is_ok();
-            if  finished_by_key_input || finished_by_webservice {
+            let finished = await_input_enter_rx.try_recv().is_ok();
+            if finished {
                 println!("Thanks for using hourglass. Good bye!");
                 break;
             }
         }
 
-        let current_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
+        let current_time_ms = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
         if hourglass_state.read().unwrap().ticking {
             welcome_screen_shown = false;
             let target_time_ms = hourglass_state.read().unwrap().target_time_ms;
             if current_time_ms < target_time_ms {
                 is_filled_white = false;
+                end_audio_played = false;
                 // Draw and animate boxes to show remaining time
                 let remaining_seconds = (target_time_ms - current_time_ms) / 1000;
                 if remaining_seconds != last_remaining_seconds {
@@ -72,7 +87,7 @@ async fn main() {
                 last_remaining_seconds = 0;
                 // Blink the display to signal "time's up"
                 let fill_white = (current_time_ms / 500) % 2 == 0;
-                if  fill_white && !is_filled_white {
+                if fill_white && !is_filled_white {
                     is_filled_white = true;
                     display.fb().fill_with_white();
                     display.safe_swap();
@@ -81,11 +96,20 @@ async fn main() {
                     display.fb().fill_with_black();
                     display.safe_swap();
                 }
+
+                if end_audio_played == false {
+                    audio_stream.play().unwrap();
+                    end_audio_played = true;
+                }
             } else {
                 let mut hourglass_state_unlocked_rw = hourglass_state.write().unwrap();
-                hourglass_state_unlocked_rw.target_time_ms = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_millis();
+                hourglass_state_unlocked_rw.target_time_ms = SystemTime::now()
+                    .duration_since(SystemTime::UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
                 hourglass_state_unlocked_rw.duration_ms = 0;
                 hourglass_state_unlocked_rw.ticking = false;
+                end_audio_played = false;
             }
         } else {
             // Show welcome screen

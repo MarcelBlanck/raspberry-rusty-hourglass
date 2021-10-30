@@ -1,5 +1,5 @@
-use crate::display::{DisplayControl, DisplayBuffer, Point, Color, WIDTH, HEIGHT};
-use minifb::{Key, Window, WindowOptions, Scale};
+use crate::display::{Color, DisplayBuffer, DisplayControl, Point, HEIGHT, WIDTH};
+use minifb::{Key, Scale, Window, WindowOptions};
 use std::convert::TryFrom;
 
 const WHITE: u32 = 0xFFFFFFFFu32;
@@ -7,8 +7,8 @@ const BLACK: u32 = 0x00000000u32;
 
 pub struct MiniFbDisplay {
     fb: DisplayBuffer,
-    buffer: [u32; 32*128],
-    window: Window
+    buffer: [u32; 32 * 128],
+    window: Window,
 }
 
 impl MiniFbDisplay {
@@ -28,7 +28,7 @@ impl MiniFbDisplay {
                     ..WindowOptions::default()
                 },
             )
-            .expect("Unable to create window")
+            .expect("Unable to create window"),
         }
     }
 }
@@ -45,17 +45,19 @@ impl DisplayControl for MiniFbDisplay {
     fn swap(&mut self) {
         for i in 0..self.buffer.len() {
             let i_isize = isize::try_from(i).unwrap();
-            let point = Point{
+            let point = Point {
                 x: i_isize % 32,
-                y: 127 - i_isize / 32
+                y: 127 - i_isize / 32,
             };
             self.buffer[i] = match self.fb.get_pixel_color(&point) {
                 Ok(Color::White) => WHITE,
                 Ok(Color::Black) => BLACK,
-                Err(s) => panic!("Unable to get pixel color {}", s)
+                Err(s) => panic!("Unable to get pixel color {}", s),
             }
         }
-        self.window.update_with_buffer(&self.buffer).unwrap();
+        self.window
+            .update_with_buffer(&self.buffer, 32, 127)
+            .unwrap();
     }
 
     fn safe_swap(&mut self) {
