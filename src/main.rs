@@ -9,6 +9,7 @@ use cpal::traits::StreamTrait;
 use crate::display::minifb_display::MiniFbDisplay;
 #[cfg(target_arch = "arm")]
 use crate::display::raspberry_display::RaspberryDisplay;
+
 use crate::{
     display::{Color, DisplayControl, Point},
     hourglass::HourglassState,

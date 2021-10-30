@@ -42,13 +42,13 @@ pub fn play(wav_filename: &str) -> cpal::Stream {
 
     let supported_stream_config = supported_configs
         .find(|config_range| {
-            config_range.channels() == wav_file.channel_count as cpal::ChannelCount
-                && config_range.min_sample_rate() <= cpal::SampleRate(wav_file.sample_rate)
-                && config_range.max_sample_rate() >= cpal::SampleRate(wav_file.sample_rate)
+            config_range.channels() == wav_file.channel_count() as cpal::ChannelCount
+                && config_range.min_sample_rate() <= cpal::SampleRate(wav_file.sample_rate())
+                && config_range.max_sample_rate() >= cpal::SampleRate(wav_file.sample_rate())
                 && config_range.sample_format() == cpal::SampleFormat::F32
         })
         .unwrap()
-        .with_sample_rate(cpal::SampleRate(wav_file.sample_rate));
+        .with_sample_rate(cpal::SampleRate(wav_file.sample_rate()));
 
     println!("supported_stream_config {:?}", supported_stream_config);
     let stream_config = supported_stream_config.config().clone();

@@ -4,24 +4,24 @@ use std::fs::{metadata, File};
 use std::io::Read;
 
 pub struct WavFile {
-    pub is_valid: bool,
-    pub file_name: String,
-    pub file_byte_size: u32,
-    pub fmt_byte_size: u32,
-    pub wav_format: WavFormat,
-    pub channel_count: ChannelCount,
-    pub sample_rate: u32,
-    pub bytes_per_sec: u32,
-    pub bytes_per_sample: u16,
-    pub bits_per_sample: u16,
-    pub current_sample: usize,
-    pub bytes: Vec<u8>,
-    pub data_chunk_offset: usize,
+    is_valid: bool,
+    file_name: String,
+    file_byte_size: u32,
+    fmt_byte_size: u32,
+    wav_format: WavFormat,
+    channel_count: ChannelCount,
+    sample_rate: u32,
+    bytes_per_sec: u32,
+    bytes_per_sample: u16,
+    bits_per_sample: u16,
+    current_sample: usize,
+    bytes: Vec<u8>,
+    data_chunk_offset: usize,
 }
 
 pub type ChannelCount = u16;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum WavFormat {
     Pcm,
     Unsupported,
@@ -96,9 +96,12 @@ impl WavFile {
 
         let wav_file = WavFile {
             is_valid: riff_string == "RIFF"
+                && file_byte_size as u64 == metadata.len()
                 && wave_string == "WAVE"
                 && fmt_string == "fmt "
-                && fmt_byte_size == 16,
+                && fmt_byte_size == 16
+                && wav_format == WavFormat::Pcm
+                && channel_count == 2,
             file_name,
             file_byte_size,
             fmt_byte_size,
@@ -132,6 +135,14 @@ impl WavFile {
             bytes: vec![],
             data_chunk_offset: 0,
         }
+    }
+
+    pub fn sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+
+    pub fn channel_count(&self) -> u16 {
+        self.channel_count
     }
 
     pub fn get_samples(&mut self, data: &mut [f32], volume_factor: f32) {
