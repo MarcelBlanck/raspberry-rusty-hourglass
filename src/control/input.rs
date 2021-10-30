@@ -1,7 +1,7 @@
 use std::io;
 use std::io::Read;
-use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
 use std::{thread, time};
 
 pub fn spawn_await_input_enter_thread() -> (thread::JoinHandle<()>, mpsc::Receiver<()>) {

@@ -1,13 +1,13 @@
-use crate::display::{DisplayControl, DisplayBuffer, Point, Color};
-use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
+use crate::display::{Color, DisplayBuffer, DisplayControl, Point};
 use rppal::gpio::{Gpio, OutputPin};
+use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use std::{thread, time};
 
 pub struct RaspberryDisplay<T, U> {
     fb: DisplayBuffer,
     pub spi: T,
     reset_pin: U,
-    dc_pin: U
+    dc_pin: U,
 }
 
 #[cfg_attr(test, mockall::automock)]
@@ -30,7 +30,7 @@ impl PinInterface for OutputPin {
     fn set_pin(&mut self, value: bool) {
         match value {
             true => self.set_high(),
-            false => self.set_low()
+            false => self.set_low(),
         };
     }
 }
@@ -41,17 +41,22 @@ impl RaspberryDisplay<Spi, OutputPin> {
             fb: DisplayBuffer::new(),
             spi: Spi::new(Bus::Spi0, SlaveSelect::Ss0, 2_000_000, Mode::Mode0).unwrap(),
             reset_pin: Gpio::new().unwrap().get(25).unwrap().into_output(),
-            dc_pin: Gpio::new().unwrap().get(24).unwrap().into_output()
+            dc_pin: Gpio::new().unwrap().get(24).unwrap().into_output(),
         }
     }
 }
 
 impl<T: SpiInterface, U: PinInterface> RaspberryDisplay<T, U> {
     pub fn new_generic(spi: T, reset_pin: U, dc_pin: U) -> RaspberryDisplay<T, U> {
-        RaspberryDisplay { fb: DisplayBuffer::new(), spi, reset_pin, dc_pin }
+        RaspberryDisplay {
+            fb: DisplayBuffer::new(),
+            spi,
+            reset_pin,
+            dc_pin,
+        }
     }
 
-    fn send_display_commands(&mut self, commands : &[u8]) {
+    fn send_display_commands(&mut self, commands: &[u8]) {
         self.dc_pin.set_pin(false);
         self.spi.send_bytes(commands);
     }
@@ -103,31 +108,35 @@ impl<T: SpiInterface, U: PinInterface> DisplayControl for RaspberryDisplay<T, U>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use mockall::*;
     use mockall::predicate::*;
+    use mockall::*;
 
-    fn get_new_mocked_display() -> RaspberryDisplay<MockSpiInterface, MockPinInterface>  {
+    fn get_new_mocked_display() -> RaspberryDisplay<MockSpiInterface, MockPinInterface> {
         RaspberryDisplay::new_generic(
             MockSpiInterface::new(),
             MockPinInterface::new(),
-            MockPinInterface::new()
+            MockPinInterface::new(),
         )
     }
 
     fn set_pin_expectation(value: bool, pin: &mut MockPinInterface, sequence: &mut Sequence) {
         pin.expect_set_pin()
-           .with(eq(value))
-           .return_const(())
-           .times(1)
-           .in_sequence(sequence);
+            .with(eq(value))
+            .return_const(())
+            .times(1)
+            .in_sequence(sequence);
     }
 
-    fn set_send_bytes_expectation(bytes: Vec<u8>, spi: &mut MockSpiInterface, sequence: &mut Sequence) {
+    fn set_send_bytes_expectation(
+        bytes: Vec<u8>,
+        spi: &mut MockSpiInterface,
+        sequence: &mut Sequence,
+    ) {
         spi.expect_send_bytes()
-           .withf(move |send_bytes: &[u8]| send_bytes == bytes)
-           .return_const(())
-           .times(1)
-           .in_sequence(sequence);
+            .withf(move |send_bytes: &[u8]| send_bytes == bytes)
+            .return_const(())
+            .times(1)
+            .in_sequence(sequence);
     }
 
     #[test]
@@ -164,9 +173,9 @@ mod tests {
 
         let mut sequence = Sequence::new();
         set_pin_expectation(false, &mut display.dc_pin, &mut sequence);
-        set_send_bytes_expectation(vec![0xABu8,0xCDu8], &mut display.spi, &mut sequence);
+        set_send_bytes_expectation(vec![0xABu8, 0xCDu8], &mut display.spi, &mut sequence);
 
-        display.send_display_commands(&[0xABu8,0xCDu8]);
+        display.send_display_commands(&[0xABu8, 0xCDu8]);
     }
 
     #[test]

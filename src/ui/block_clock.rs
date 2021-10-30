@@ -1,4 +1,4 @@
-use crate::display::{DisplayBuffer, Color, WIDTH, HEIGHT};
+use crate::display::{Color, DisplayBuffer, HEIGHT, WIDTH};
 
 pub fn draw_block_clock(remaining_seconds: u128, frame_buffer: &mut DisplayBuffer) {
     let minutes = 1 + remaining_seconds as isize / 60;
@@ -18,7 +18,8 @@ pub fn draw_block_clock(remaining_seconds: u128, frame_buffer: &mut DisplayBuffe
         let x1 = x0 - rect_size;
 
         let y1 = if minute == minutes - 1 {
-            let segments_filled = f32::floor((1 + rect_size) as f32 * seconds as f32 / 60f32) as isize;
+            let segments_filled =
+                f32::floor((1 + rect_size) as f32 * seconds as f32 / 60f32) as isize;
             let blinking_subtractor = if seconds % 2 == 1 { 0 } else { 1 };
             y0 + segments_filled - blinking_subtractor
         } else {
