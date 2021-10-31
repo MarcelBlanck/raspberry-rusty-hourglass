@@ -1,4 +1,4 @@
-use crate::display::{Color, DisplayBuffer, DisplayControl, Point, HEIGHT, WIDTH};
+use crate::gui::display_control::{Color, DisplayBuffer, DisplayControl, Point, HEIGHT, WIDTH};
 use minifb::{Key, Scale, Window, WindowOptions};
 use std::convert::TryFrom;
 

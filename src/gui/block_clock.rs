@@ -1,4 +1,4 @@
-use crate::display::{Color, DisplayBuffer, HEIGHT, WIDTH};
+use crate::gui::display_control::{Color, DisplayBuffer, HEIGHT, WIDTH};
 
 pub fn draw_block_clock(remaining_seconds: u128, frame_buffer: &mut DisplayBuffer) {
     let minutes = 1 + remaining_seconds as isize / 60;

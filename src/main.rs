@@ -6,14 +6,12 @@ use audio::audio_playback;
 use cpal::traits::StreamTrait;
 
 #[cfg(not(target_arch = "arm"))]
-use crate::display::minifb_display::MiniFbDisplay;
+use crate::gui::display_minifb::MiniFbDisplay;
 #[cfg(target_arch = "arm")]
-use crate::display::raspberry_display::RaspberryDisplay;
+use crate::gui::display_raspberry::RaspberryDisplay;
 
-use crate::{
-    display::{Color, DisplayControl, Point},
-    hourglass::HourglassState,
-};
+use crate::gui::display_control::{Color, DisplayControl, Point};
+use crate::hourglass::HourglassState;
 
 use std::time::SystemTime;
 use std::{sync::Arc, sync::RwLock, thread, time};
@@ -21,9 +19,8 @@ use std::{sync::Arc, sync::RwLock, thread, time};
 mod audio;
 mod control;
 mod data;
-mod display;
 mod hourglass;
-mod ui;
+mod gui;
 
 const MAX_BLINK_TIME_MS: u128 = 120000;
 
@@ -81,7 +78,7 @@ async fn main() {
                 if remaining_seconds != last_remaining_seconds {
                     last_remaining_seconds = remaining_seconds;
                     display.fb().fill_with_black();
-                    ui::block_clock::draw_block_clock(remaining_seconds, display.fb());
+                    gui::block_clock::draw_block_clock(remaining_seconds, display.fb());
                     display.safe_swap();
                 }
             } else if current_time_ms < target_time_ms + MAX_BLINK_TIME_MS {

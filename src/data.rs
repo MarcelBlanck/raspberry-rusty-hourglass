@@ -1,4 +1,4 @@
-use crate::display::Pixmap;
+use crate::gui::display_control::Pixmap;
 
 #[rustfmt::skip]
 pub const WELCOME_SCREEN_PIXMAP: Pixmap = Pixmap {

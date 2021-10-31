@@ -1,4 +1,4 @@
-use crate::display::{Color, DisplayBuffer, DisplayControl, Point};
+use crate::gui::display_control::{Color, DisplayBuffer, DisplayControl, Point};
 use rppal::gpio::{Gpio, OutputPin};
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use std::{thread, time};

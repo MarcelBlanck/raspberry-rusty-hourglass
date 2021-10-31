@@ -1,8 +1,3 @@
-#[cfg(not(target_arch = "arm"))]
-pub mod minifb_display;
-#[cfg(target_arch = "arm")]
-pub mod raspberry_display;
-
 pub const WIDTH: isize = 32;
 pub const HEIGHT: isize = 128;
 const DISPLAY_BUFFER_SIZE: usize = 512; // height * width / 8
