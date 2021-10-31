@@ -19,8 +19,8 @@ use std::{sync::Arc, sync::RwLock, thread, time};
 mod audio;
 mod control;
 mod data;
-mod hourglass;
 mod gui;
+mod hourglass;
 
 const MAX_BLINK_TIME_MS: u128 = 120000;
 
