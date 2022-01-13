@@ -2,14 +2,15 @@ use crate::hourglass::{HourglassState, ThreadSafeHourglassState, MAXIMUM_DURATIO
 use actix_files::Files;
 use actix_web::dev::Server;
 use actix_web::{rt::System, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::SystemTime;
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
 
 pub fn start_webservice(state: ThreadSafeHourglassState) -> Server {
-    let (control_extraction_tx, control_extraction_rx): (Sender<Server>, Receiver<Server>) = mpsc::channel();
+    let (control_extraction_tx, control_extraction_rx): (Sender<Server>, Receiver<Server>) =
+        mpsc::channel();
 
     thread::spawn(move || {
         let sys = System::new("http-server");
