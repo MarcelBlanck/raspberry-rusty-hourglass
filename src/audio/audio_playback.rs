@@ -1,3 +1,5 @@
+use std::ffi::NulError;
+use std::fmt::Debug;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Data, Sample, SampleFormat, SampleRate};
 use std::fs::read;
@@ -9,29 +11,20 @@ fn find_audio_output_device(start_of_name: Option<&str>) -> Option<cpal::Device>
         .output_devices()
         .unwrap()
         .find(|device| {
+            println!("Device found: {}", device.name().unwrap());
             (start_of_name.is_none() || device.name().unwrap().starts_with(start_of_name.unwrap()))
                 && device.supported_output_configs().unwrap().next().is_some()
         })
 }
 
 fn find_any_audio_output_device() -> Option<cpal::Device> {
-    cpal::default_host()
-        .output_devices()
-        .unwrap()
-        .find(|device| {
-            let mut supported_configs_range = device
-                .supported_output_configs()
-                .expect("error while querying configs");
-            supported_configs_range.next().is_some()
-        })
+    cpal::default_host().default_output_device()
 }
 
 pub fn play(wav_filename: &str) -> cpal::Stream {
     let mut wav_file = audio::wav_reader::WavFile::new(wav_filename.to_string());
-    // TODO deal with invalid wav file
 
-    let device = find_audio_output_device(Some("sysdefault"))
-        .or_else(|| find_audio_output_device(None))
+    let device =  find_any_audio_output_device()
         .unwrap();
 
     println!("{}", device.name().unwrap());
@@ -42,10 +35,13 @@ pub fn play(wav_filename: &str) -> cpal::Stream {
 
     let supported_stream_config = supported_configs
         .find(|config_range| {
-            config_range.channels() == wav_file.channel_count() as cpal::ChannelCount
-                && config_range.min_sample_rate() <= cpal::SampleRate(wav_file.sample_rate())
-                && config_range.max_sample_rate() >= cpal::SampleRate(wav_file.sample_rate())
-                && config_range.sample_format() == cpal::SampleFormat::F32
+            println!("{} {:?} {:?} {:?} {:?}", config_range.channels(), config_range.min_sample_rate(),config_range.max_sample_rate(),  config_range.sample_format(), wav_file.sample_rate());
+            let ok = (config_range.channels() >= wav_file.channel_count() as cpal::ChannelCount)
+                // && (config_range.min_sample_rate() <= cpal::SampleRate(wav_file.sample_rate()))
+                // && (config_range.max_sample_rate() >= cpal::SampleRate(wav_file.sample_rate()))
+                && (config_range.sample_format() == cpal::SampleFormat::F32);
+            println!("OK {}", ok);
+            ok
         })
         .unwrap()
         .with_sample_rate(cpal::SampleRate(wav_file.sample_rate()));
@@ -61,7 +57,7 @@ pub fn play(wav_filename: &str) -> cpal::Stream {
                 wav_file.get_samples(data, 0.05)
             },
             |error| {
-                println!("Audio output error: {}", error);
+                println!("Audio output error: {:?}", error);
             },
         )
         .unwrap()
