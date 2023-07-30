@@ -35,7 +35,7 @@ pub trait DisplayControl {
     fn deinit(&mut self);
     fn swap(&mut self);
     fn safe_swap(&mut self);
-    fn fb<'a>(&'a mut self) -> &'a mut DisplayBuffer;
+    fn fb(&mut self) -> &mut DisplayBuffer;
 }
 
 pub struct DisplayBuffer {
@@ -60,8 +60,8 @@ impl DisplayBuffer {
     pub fn fill_with_pixmap(&mut self, pixmap: &Pixmap) {
         let data = &pixmap.data;
         for x in 0..WIDTH as usize {
-            for y in 0..HEIGHT as usize {
-                let pixel_color = if data[y][x] == 0 {
+            for (y, data_row) in data.iter().enumerate().take(HEIGHT as usize) {
+                let pixel_color = if data_row[x] == 0 {
                     Color::Black
                 } else {
                     Color::White
@@ -107,9 +107,9 @@ impl DisplayBuffer {
     }
 
     pub fn toggle_pixel(&mut self, point: &Point) {
-        match self.get_pixel_color(&point) {
-            Ok(Color::White) => self.set_pixel_color(&point, &Color::Black),
-            Ok(Color::Black) => self.set_pixel_color(&point, &Color::White),
+        match self.get_pixel_color(point) {
+            Ok(Color::White) => self.set_pixel_color(point, &Color::Black),
+            Ok(Color::Black) => self.set_pixel_color(point, &Color::White),
             Err(s) => println!("toggle_pixel failed for reason: {}", s),
         }
     }
@@ -183,34 +183,22 @@ impl DisplayBuffer {
         for x in bottom_left.x..(top_right.x + 1) {
             self.set_pixel_color(
                 &Point {
-                    x: x,
+                    x,
                     y: bottom_left.y,
                 },
                 border_color,
             );
-            self.set_pixel_color(
-                &Point {
-                    x: x,
-                    y: top_right.y,
-                },
-                border_color,
-            );
+            self.set_pixel_color(&Point { x, y: top_right.y }, border_color);
         }
         for y in (bottom_left.y + 1)..top_right.y {
             self.set_pixel_color(
                 &Point {
                     x: bottom_left.x,
-                    y: y,
+                    y,
                 },
                 border_color,
             );
-            self.set_pixel_color(
-                &Point {
-                    x: top_right.x,
-                    y: y,
-                },
-                border_color,
-            );
+            self.set_pixel_color(&Point { x: top_right.x, y }, border_color);
             for x in (bottom_left.x + 1)..top_right.x {
                 self.set_pixel_color(&Point { x, y }, fill_color);
             }

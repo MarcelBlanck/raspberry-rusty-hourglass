@@ -36,27 +36,27 @@ impl WavFormat {
     }
 }
 
-fn read_string(buffer: &Vec<u8>, pos: usize, length: usize) -> String {
+fn read_string(buffer: &[u8], pos: usize, length: usize) -> String {
     let mut string = String::with_capacity(length);
-    for i in pos..pos + length {
-        string.push(buffer[i] as char);
+    for data in buffer.iter().skip(pos).take(length) {
+        string.push(*data as char);
     }
     string
 }
 
-fn vec8_slice_to_array<const N: usize>(v: &Vec<u8>, pos: usize) -> [u8; N] {
+fn vec8_slice_to_array<const N: usize>(v: &[u8], pos: usize) -> [u8; N] {
     TryInto::try_into(&v[pos..pos + N]).unwrap()
 }
 
-fn read_u32_value(v: &Vec<u8>, pos: usize) -> u32 {
+fn read_u32_value(v: &[u8], pos: usize) -> u32 {
     u32::from_le_bytes(vec8_slice_to_array::<4>(v, pos))
 }
 
-fn read_u16_value(v: &Vec<u8>, pos: usize) -> u16 {
+fn read_u16_value(v: &[u8], pos: usize) -> u16 {
     u16::from_le_bytes(vec8_slice_to_array::<2>(v, pos))
 }
 
-fn read_i16_value(v: &Vec<u8>, pos: usize) -> i16 {
+fn read_i16_value(v: &[u8], pos: usize) -> i16 {
     i16::from_le_bytes(vec8_slice_to_array::<2>(v, pos))
 }
 
@@ -66,7 +66,10 @@ impl WavFile {
         let mut file = File::open(&file_name).expect("File not found.");
         let metadata = metadata(&file_name).expect("Metadata could not be read.");
         let mut bytes = vec![0; metadata.len() as usize];
-        file.read(&mut bytes).expect("buffer overflow");
+        let n = file.read(&mut bytes).expect("buffer overflow");
+        if n != bytes.len() {
+            println!("Warning, not all metadata bytes could be read.")
+        }
 
         let riff_string = read_string(&bytes, 0, 4);
         let file_byte_size = read_u32_value(&bytes, 4);
@@ -94,7 +97,7 @@ impl WavFile {
             }
         }
 
-        let wav_file = WavFile {
+        WavFile {
             is_valid: riff_string == "RIFF"
                 && file_byte_size as u64 == metadata.len()
                 && wave_string == "WAVE"
@@ -114,9 +117,7 @@ impl WavFile {
             current_sample: 0,
             bytes,
             data_chunk_offset,
-        };
-
-        wav_file
+        }
     }
 
     pub fn invalid() -> Self {

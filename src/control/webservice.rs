@@ -8,12 +8,8 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::SystemTime;
 
-pub fn start_webservice(state: ThreadSafeHourglassState) -> Server {
-    let (control_extraction_tx, control_extraction_rx): (Sender<Server>, Receiver<Server>) =
-        mpsc::channel();
-
+pub fn start_webservice(state: ThreadSafeHourglassState) {
     thread::spawn(move || {
-        let sys = System::new("http-server");
         let server = HttpServer::new(move || {
             App::new()
                 .app_data(web::Data::new(state.clone()))
@@ -32,15 +28,12 @@ pub fn start_webservice(state: ThreadSafeHourglassState) -> Server {
                 .route("/end_service", web::get().to(end_service))
                 .service(Files::new("/", "./html/"))
         })
-        .bind(("0.0.0.0", 8080))
+        .bind((r#"127.0.0.1"#, 8080))
         .unwrap()
         .run();
 
-        control_extraction_tx.send(server).unwrap();
-        sys.run()
+        let _ = System::new().block_on(server);
     });
-
-    control_extraction_rx.recv().unwrap()
 }
 
 fn start_hourglass_timer(data: &web::Data<ThreadSafeHourglassState>) {
@@ -65,18 +58,18 @@ fn stop_hourglass_timer(data: &web::Data<ThreadSafeHourglassState>) {
 
 async fn index(_data: web::Data<ThreadSafeHourglassState>) -> HttpResponse {
     HttpResponse::Found()
-        .header("LOCATION", "/index.html")
+        .append_header(("LOCATION", "/index.html"))
         .finish()
 }
 
 async fn start(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
     start_hourglass_timer(&data);
-    format!("Started.")
+    "Started.".to_string()
 }
 
 async fn stop(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
     stop_hourglass_timer(&data);
-    format!("Stopped.")
+    "Stopped.".to_string()
 }
 
 async fn plus_minute(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
@@ -89,18 +82,18 @@ async fn plus_minute(data: web::Data<ThreadSafeHourglassState>) -> impl Responde
             .clamp(0, MAXIMUM_DURATION_MS);
     }
     start_hourglass_timer(&data);
-    format!("Minute added.")
+    "Minute added.".to_string()
 }
 
 async fn minus_minute(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
     let mut data_unlocked_rw = data.write().unwrap();
-    let decremented_duration_ms = data_unlocked_rw.duration_ms.checked_sub(60000).unwrap_or(0);
+    let decremented_duration_ms = data_unlocked_rw.duration_ms.saturating_sub(60000);
     if data_unlocked_rw.ticking {
         let subtracted_ms = data_unlocked_rw.duration_ms - decremented_duration_ms;
         data_unlocked_rw.target_time_ms -= subtracted_ms;
     }
     data_unlocked_rw.duration_ms = decremented_duration_ms;
-    format!("Minute subtracted.")
+    "Minute subtracted.".to_string()
 }
 
 async fn get_ticking(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
@@ -121,25 +114,22 @@ async fn set_duration_ms(
 ) -> impl Responder {
     let duration_ms = req.match_info().get("duration_ms");
     if duration_ms.is_some() {
-        match u128::from_str_radix(duration_ms.unwrap(), 10) {
+        match duration_ms.unwrap().parse::<u128>() {
             Ok(duration_ms) => {
                 let mut data_unlocked_rw = data.write().unwrap();
                 data_unlocked_rw.duration_ms = duration_ms.clamp(0, MAXIMUM_DURATION_MS);
             }
             Err(error) => {
-                return format!(
-                    "Error: Unable to parse duration in ms ({}).",
-                    error.to_string()
-                );
+                return format!("Error: Unable to parse duration in ms. {:?}", error);
             }
         };
         format!("Setting duration to {}ms.", duration_ms.unwrap())
     } else {
-        format!("Error: No duration in ms was given.")
+        "Error: No duration in ms was given.".to_string()
     }
 }
 
 async fn end_service(data: web::Data<ThreadSafeHourglassState>) -> impl Responder {
     data.write().unwrap().finalize = true;
-    format!("Webservice teared down.")
+    "Webservice teared down.".to_string()
 }

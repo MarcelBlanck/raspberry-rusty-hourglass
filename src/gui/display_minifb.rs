@@ -65,7 +65,7 @@ impl DisplayControl for MiniFbDisplay {
         self.swap(); // Additional swap to ensure display when double buffering
     }
 
-    fn fb<'a>(&'a mut self) -> &'a mut DisplayBuffer {
+    fn fb(&mut self) -> &mut DisplayBuffer {
         &mut self.fb
     }
 }

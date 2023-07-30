@@ -31,7 +31,7 @@ async fn main() {
     audio_stream.pause().unwrap();
 
     let hourglass_state = Arc::new(RwLock::new(HourglassState::new()));
-    let webservice = control::webservice::start_webservice(hourglass_state.clone());
+    control::webservice::start_webservice(hourglass_state.clone());
     let (await_input_enter_thread, await_input_enter_rx) =
         control::input::spawn_await_input_enter_thread();
 
@@ -95,7 +95,7 @@ async fn main() {
                     display.safe_swap();
                 }
 
-                if end_audio_played == false {
+                if !end_audio_played {
                     audio_stream.play().unwrap();
                     end_audio_played = true;
                 }
@@ -123,6 +123,5 @@ async fn main() {
     }
 
     display.deinit();
-    webservice.stop(false).await;
     await_input_enter_thread.join().unwrap();
 }

@@ -1,6 +1,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Data, Sample, SampleFormat, SampleRate};
 use std::fs::read;
+use std::time::Duration;
 
 use crate::audio::{self, audio_playback};
 
@@ -63,6 +64,7 @@ pub fn play(wav_filename: &str) -> cpal::Stream {
             |error| {
                 println!("Audio output error: {}", error);
             },
+            None,
         )
         .unwrap()
 }
