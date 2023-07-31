@@ -1,9 +1,8 @@
 {
-    "rust.target": "arm-unknown-linux-gnueabihf",
-    "rust-analyzer.cargo.target": "arm-unknown-linux-gnueabihf",
     "rust-analyzer.diagnostics.disabled": [ "inactive-code" ],
     "python.defaultInterpreterPath": "./env/bin/python3",
     "rust-analyzer.linkedProjects": [
         "./Cargo.toml"
-    ]
+    ],
+    "workbench.colorTheme": "Visual Studio Dark"
 }

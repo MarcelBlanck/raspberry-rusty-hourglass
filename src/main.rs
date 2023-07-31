@@ -2,8 +2,8 @@
 #![allow(unused_variables)]
 #![allow(unused_imports)]
 
-use audio::audio_playback;
-use cpal::traits::StreamTrait;
+use audio::wav_player;
+use audio::Player;
 
 #[cfg(not(target_arch = "arm"))]
 use crate::gui::display_minifb::MiniFbDisplay;
@@ -13,7 +13,7 @@ use crate::gui::display_raspberry::RaspberryDisplay;
 use crate::gui::display_control::{Color, DisplayControl, Point};
 use crate::hourglass::HourglassState;
 
-use std::time::SystemTime;
+use std::time::{SystemTime, Duration};
 use std::{sync::Arc, sync::RwLock, thread, time};
 
 mod audio;
@@ -26,9 +26,8 @@ const MAX_BLINK_TIME_MS: u128 = 120000;
 
 #[actix_web::main]
 async fn main() {
-    let audio_stream =
-        audio_playback::play("./audio/424244__aceinet__number-90-flange-the-hammer-on-e.wav");
-    audio_stream.pause().unwrap();
+    let wav_file_path = "./audio/424244__aceinet__number-90-flange-the-hammer-on-e.wav".to_string();
+    let mut wav_player = wav_player::WavPlayer::new(wav_file_path);
 
     let hourglass_state = Arc::new(RwLock::new(HourglassState::new()));
     control::webservice::start_webservice(hourglass_state.clone());
@@ -96,7 +95,7 @@ async fn main() {
                 }
 
                 if !end_audio_played {
-                    audio_stream.play().unwrap();
+                    wav_player.play(Duration::from_secs(120));
                     end_audio_played = true;
                 }
             } else {

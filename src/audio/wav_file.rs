@@ -146,6 +146,10 @@ impl WavFile {
         self.channel_count
     }
 
+    pub fn rewind(&mut self) {
+        self.current_sample = 0;
+    }
+
     pub fn get_samples(&mut self, data: &mut [f32], volume_factor: f32) {
         for data_out in data.iter_mut() {
             let sample_data_index = self.data_chunk_offset + 2 * self.current_sample;
