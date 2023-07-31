@@ -80,6 +80,7 @@ async fn main() {
                     gui::block_clock::draw_block_clock(remaining_seconds, display.fb());
                     display.safe_swap();
                 }
+                wav_player.stop();
             } else if current_time_ms < target_time_ms + MAX_BLINK_TIME_MS {
                 last_remaining_seconds = 0;
                 // Blink the display to signal "time's up"
@@ -116,6 +117,7 @@ async fn main() {
                 is_filled_white = false;
                 display.fb().fill_with_pixmap(&data::WELCOME_SCREEN_PIXMAP);
                 display.safe_swap();
+                wav_player.stop();
             }
         }
         thread::sleep(time::Duration::from_millis(250));
